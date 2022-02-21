@@ -42,12 +42,10 @@ void getCalderaCoin() {
 }
 
 void afterPrismBreak() {
-	cli_execute("pull all");
+	cli_execute("pull all; uneffect Feeling Lost; counters clear; peevpee.php?action=smashstone&confirm=on; backupcamera reverser on");
 	put_closet(my_meat() - 2000000);
-	cli_execute("uneffect Feeling Lost; counters clear; peevpee.php?action=smashstone&confirm=on; breakfast; Detective Solver.ash; backupcamera reverser on");
-	if (get_property("boomBoxSong") != "Total Eclipse of Your Meat") 
-		cli_execute("boombox meat");
 	tryUse($item[can of Rain-Doh]);
+	tryUse($item[astral six-pack]);
 	
 	equip($slot[hat], $item[Daylight Shavings Helmet]);
 	equip($slot[weapon], $item[Fourth of May Cosplay Saber]);
@@ -66,81 +64,91 @@ void afterPrismBreak() {
 	getCalderaCoin();
 }
 
+boolean haveOrganSpace() {
+	return my_spleen_use() < spleen_limit() || my_fullness() < fullness_limit() || my_inebriety() < inebriety_limit();
+}
+
+void doGarboDay(boolean ascend) {
+	assert(can_interact(), "Still in run!");
+	cli_execute("breakfast; Detective Solver.ash");
+	if (my_inebriety() <= inebriety_limit())
+		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
+	if (my_adventures() == 0 && !haveOrganSpace())
+		cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
+	if (ascend) 
+		cli_execute(`combo {my_adventures()}; pvp loot On the Nice List`);
+	else {
+		cli_execute("maximize adv; terminal enquiry familiar.enq");
+		if (!(get_campground() contains $item[clockwork maid])) {
+			if (!have($item[clockwork maid])) 
+				buy(1, $item[clockwork maid], 8 * get_property("valueOfAdventure").to_int());
+			tryUse($item[clockwork maid]);
+		}
+	}
+}
+
 void main() {
+	boolean skipCasual = false;
 	logProfit("Begin");
 	
 	logProfit("BeforeFirstGarbo");
 	if (can_ascend()) {
-		assert(can_interact(), "Still in run after day 1");
-		cli_execute("breakfast, Detective Solver.ash");
-		if (my_inebriety() <= inebriety_limit())
-			cli_execute("garbo ascend; CONSUME NIGHTCAP VALUE 4000");
-		cli_execute(`combo {my_adventures()}, pvp fame 1`);
+		doGarboDay(true);
 		// TODO handle swapping to DNA lab and creating 3 tonics?
 	}
 	logProfit("AfterFirstGarbo");
 	
 	logProfit("BeforeCS");
 	if (can_ascend() || my_path() == "Community Service") 
-		abort("Manually ascend CS to perm skills");
-		assert(my_daycount() == 1, "Still in run after day 1");
+		//abort("Manually ascend CS to perm skills");
 		cli_execute("fizz-sccs.ash");
 	logProfit("AfterCS");
 	
 	logProfit("BeforeSecondGarbo");
-	if (can_ascend(true)) {
-		afterPrismBreak();
-		if (my_inebriety() <= inebriety_limit())
-			cli_execute("garbo ascend; CONSUME NIGHTCAP VALUE 4000");
-		cli_execute(`combo {my_adventures()}, pvp fame 1`);
+	if (can_ascend(true) && !skipCasual) {
+		afterPrismBreak();	
+		doGarboDay(true);
 	}
 	logProfit("AfterSecondGarbo");
-	
+
 	logProfit("BeforeCasual");
-	if (can_ascend(true)) {
-		class playerClass = $class[Seal Clubber];
-		
-		string moon;
-		item nightstand;
-		switch (playerClass.primestat) {
-			case $stat[Muscle]:
-				moon = "Mongoose";
-				nightstand = $item[electric muscle stimulator];
-			case $stat[Mysticality]:
-				moon = "Wallaby";
-				nightstand = $item[foreign language tapes];
-			case $stat[Moxie]:
-				moon = "Vole";
-				nightstand = $item[bowl of potpourri];
+	if (!skipCasual) {
+		if (can_ascend(true)) {
+			class playerClass = $class[Seal Clubber];
+			
+			string moon;
+			item nightstand;
+			switch (playerClass.primestat) {
+				case $stat[Muscle]:
+					moon = "Mongoose";
+					nightstand = $item[electric muscle stimulator];
+				case $stat[Mysticality]:
+					moon = "Wallaby";
+					nightstand = $item[foreign language tapes];
+				case $stat[Moxie]:
+					moon = "Vole";
+					nightstand = $item[bowl of potpourri];
+			}
+			
+			if (get_workshed() != $item[Asdon Martin keyfob])
+				use(1, $item[Asdon Martin keyfob]);
+			
+			if (!(get_chateau() contains nightstand))
+				buy(1, nightstand);
+			
+			// change garden?
+			ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 		}
-		
-		if (get_workshed() != $item[Asdon Martin keyfob])
-			use(1, $item[Asdon Martin keyfob]);
-		
-		if (!(get_chateau() contains nightstand)) {
-			retrieve_item(1, nightstand)
-			use(1, nightstand)
-		}
-		
-		// change garden?
-		ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
-	}
-	
-	if (!get_property("kingLiberated").to_boolean()) {
 		cli_execute("loopcasual");
-	}
+	}		
 	logProfit("AfterCasual");
 	
 	logProfit("BeforeThirdGarbo");
-	assert(!can_ascend() && !can_ascend(True), "We should've already ascended twice today");
 	afterPrismBreak();
-	if (my_inebriety() <= inebriety_limit())
-		cli_execute("garbo; CONSUME NIGHTCAP");
-	cli_execute("maximize adv; terminal enquiry familiar.enq");
-	if (!(get_campground() contains $item[clockwork maid])) {
-		if (!have($item[clockwork maid])) 
-			buy(1, $item[clockwork maid], 8 * get_property("valueOfAdventure").to_int());
-		tryUse($item[clockwork maid]);
+	abort("use asdon to buff up if we have it");
+	if (get_workshed() != $item[cold medicine cabinet])
+		use(1, $item[cold medicine cabinet]);
+	doGarboDay(false);
 	logProfit("AfterThirdGarbo");
 	
 	logProfit("End");

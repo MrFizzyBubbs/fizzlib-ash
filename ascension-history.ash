@@ -18,7 +18,7 @@ ascension [int] get_history() {
 }
 
 boolean can_ascend(boolean casual) {
-	if (!can_interact()) return false;
+	if (!can_interact() || !get_property("kingLiberated").to_boolean()) return false;
 	
 	string page = visit_url(`ascensionhistory.php?back=self&who={my_id()}`);
 	string today = now_to_string("MM/dd/yy");
