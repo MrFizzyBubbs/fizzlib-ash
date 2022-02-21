@@ -29,9 +29,13 @@ boolean can_ascend(boolean casual) {
 	return True;
 }
 
-boolean can_ascend() {
-	return can_ascend(False);
-}
+// boolean canAscendNoncasual() {
+	// return canAscend(false);
+// }
+
+// boolean canAscendCasual() {
+	// return canAscend(true);
+// }
 
 void main() {
 	print(`can ascend non-casual: {can_ascend(False)}`);

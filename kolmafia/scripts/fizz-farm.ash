@@ -31,7 +31,7 @@ void getCalderaCoin() {
 		acquire($effect[Big]);
 		ensureHp(0.8);
 		ensureMp(8);
-		adv1($location[The Bubblin' Caldera], -1, mNew().mCursing().mAttackRepeat());
+		adv1($location[The Bubblin' Caldera], -1, mNew().mAttackRepeat());
 		if ($location[The Bubblin' Caldera].noncombat_queue.contains_text("Lava Dogs"))
 			set_property("lastDoghouseVolcoino", my_ascensions());
 	}
@@ -122,12 +122,15 @@ void main() {
 				case $stat[Muscle]:
 					moon = "Mongoose";
 					nightstand = $item[electric muscle stimulator];
+					break;
 				case $stat[Mysticality]:
 					moon = "Wallaby";
 					nightstand = $item[foreign language tapes];
+					break;
 				case $stat[Moxie]:
 					moon = "Vole";
 					nightstand = $item[bowl of potpourri];
+					break;
 			}
 			
 			if (get_workshed() != $item[Asdon Martin keyfob])
@@ -139,13 +142,22 @@ void main() {
 			// change garden?
 			ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 		}
+		
+		if (my_turncount() == 0) {
+			equip($slot[hat], $item[pentagram bandana]);
+			foreach ef in $effects[Empathy, Leash of Linguini, Astral Shell, Elemental Saucesphere] {
+				if (my_mp() < mp_cost(ef.to_skill()))
+					use(1, $item[psychokinetic energy blob]);
+				use_skill(ef.to_skill());
+			}
+		}
 		cli_execute("loopcasual");
 	}		
 	logProfit("AfterCasual");
 	
 	logProfit("BeforeThirdGarbo");
 	afterPrismBreak();
-	abort("use asdon to buff up if we have it");
+	//abort("use asdon to buff up if we have it");
 	if (get_workshed() != $item[cold medicine cabinet])
 		use(1, $item[cold medicine cabinet]);
 	doGarboDay(false);
