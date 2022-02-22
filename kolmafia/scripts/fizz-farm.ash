@@ -93,13 +93,16 @@ boolean haveOrganSpace() {
 }
 
 void doGarboDay(boolean ascend) {
-	assert(can_interact(), "Still in run!");
+	assert(can_interact(), "Still in run");
 	cli_execute("breakfast; Detective Solver.ash");
-	// TODO tune moon?
-	if (my_inebriety() <= inebriety_limit())
+	if (!get_property("moonTuned").to_boolean()) 
+		cli_execute("spoon Opossum");
+	if (my_inebriety() <= inebriety_limit()) {
 		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
-	if (my_adventures() == 0 && !haveOrganSpace())
-		cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
+	}
+	assert(!haveOrganSpace(), "Organ space remaining");
+	assert(my_adventures() == 0, "Adventures remaining");
+	cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
 	if (ascend) 
 		cli_execute(`combo {my_adventures()}; pvp loot On the Nice List`);
 	else {
@@ -161,8 +164,7 @@ void main() {
 		
 		if (!(get_chateau() contains nightstand))
 			buy(1, nightstand);
-		
-		abort(`verify correct moonsign for {playerClass.primestat} class: {moon}`);			
+			
 		// change garden?
 		ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 		
