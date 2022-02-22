@@ -1,1 +1,2 @@
 https://github.com/Ezandora/Detective-Solver/branches/Release/
+https://svn.code.sf.net/p/guyymafia/code/gasdon

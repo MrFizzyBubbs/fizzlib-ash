@@ -1,8 +1,32 @@
 import <fizz-sccs-lib.ash>
 import <fizz-sccs-combat.ash>
 import <fizz-sccs-ascend.ash>
-import <ascension-history.ash>
 import <profit-tracking.ash>
+
+boolean canAscend(boolean casual) {
+	if (!get_property("kingLiberated").to_boolean())
+		return false;
+	
+	string page = visit_url(`ascensionhistory.php?back=self&who={my_id()}`);
+	string today = now_to_string("MM/dd/yy");
+	
+	string pattern;
+	if (casual)
+		pattern = `{today}(?:(?!<\/tr>).)+title="Casual"><\/td><\/tr>`;
+	else
+		pattern = `{today}(?:(?!<\/tr>|title="Casual"><\/td>).)+<\/tr>`;
+	
+	matcher match = create_matcher(pattern, page);
+	return !find(match);
+}
+
+boolean canAscendNoncasual() {
+	return canAscend(false);
+}
+
+boolean canAscendCasual() {
+	return canAscend(true);
+}
 
 boolean isDuplicatable(item it) {
 	boolean isStealable = is_tradeable(it) && is_discardable(it) && !it.gift;
@@ -71,6 +95,7 @@ boolean haveOrganSpace() {
 void doGarboDay(boolean ascend) {
 	assert(can_interact(), "Still in run!");
 	cli_execute("breakfast; Detective Solver.ash");
+	// TODO tune moon?
 	if (my_inebriety() <= inebriety_limit())
 		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
 	if (my_adventures() == 0 && !haveOrganSpace())
@@ -92,72 +117,62 @@ void main() {
 	logProfit("Begin");
 	
 	logProfit("BeforeFirstGarbo");
-	if (can_ascend()) {
+	if (canAscendNoncasual()) {
 		doGarboDay(true);
 		// TODO handle swapping to DNA lab and creating 3 tonics?
 	}
 	logProfit("AfterFirstGarbo");
 	
 	logProfit("BeforeCS");
-	if (can_ascend() || my_path() == "Community Service") 
-		//abort("Manually ascend CS to perm skills");
+	if (canAscendNoncasual() || my_path() == "Community Service")
 		cli_execute("fizz-sccs.ash");
 	logProfit("AfterCS");
 	
 	logProfit("BeforeSecondGarbo");
-	if (can_ascend(true) && !skipCasual) {
+	if (canAscendCasual() && !skipCasual) {
 		afterPrismBreak();	
 		doGarboDay(true);
 	}
 	logProfit("AfterSecondGarbo");
 
 	logProfit("BeforeCasual");
-	if (!skipCasual) {
-		if (can_ascend(true)) {
-			class playerClass = $class[Seal Clubber];
-			
-			string moon;
-			item nightstand;
-			switch (playerClass.primestat) {
-				case $stat[Muscle]:
-					moon = "Mongoose";
-					nightstand = $item[electric muscle stimulator];
-					break;
-				case $stat[Mysticality]:
-					moon = "Wallaby";
-					nightstand = $item[foreign language tapes];
-					break;
-				case $stat[Moxie]:
-					moon = "Vole";
-					nightstand = $item[bowl of potpourri];
-					break;
-			}
-			
-			if (get_workshed() != $item[Asdon Martin keyfob])
-				use(1, $item[Asdon Martin keyfob]);
-			
-			if (!(get_chateau() contains nightstand))
-				buy(1, nightstand);
-			
-			// change garden?
-			ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
+	if (canAscendCasual() && !skipCasual) {
+		class playerClass = $class[Seal Clubber];
+		
+		string moon;
+		item nightstand;
+		switch (playerClass.primestat) {
+			case $stat[Muscle]:
+				moon = "Mongoose";
+				nightstand = $item[electric muscle stimulator];
+				break;
+			case $stat[Mysticality]:
+				moon = "Wallaby";
+				nightstand = $item[foreign language tapes];
+				break;
+			case $stat[Moxie]:
+				moon = "Vole";
+				nightstand = $item[bowl of potpourri];
+				break;
 		}
 		
-		if (my_turncount() == 0) {
-			equip($slot[hat], $item[pentagram bandana]);
-			foreach ef in $effects[Empathy, Leash of Linguini, Astral Shell, Elemental Saucesphere] {
-				if (my_mp() < mp_cost(ef.to_skill()))
-					use(1, $item[psychokinetic energy blob]);
-				use_skill(ef.to_skill());
-			}
-		}
-		cli_execute("loopcasual");
-	}		
+		if (get_workshed() != $item[Asdon Martin keyfob])
+			use(1, $item[Asdon Martin keyfob]);
+		
+		if (!(get_chateau() contains nightstand))
+			buy(1, nightstand);
+		
+		abort(`verify correct moonsign for {playerClass.primestat} class: {moon}`);			
+		// change garden?
+		ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
+		
+	}
+	cli_execute("loopcasual");
 	logProfit("AfterCasual");
 	
 	logProfit("BeforeThirdGarbo");
 	afterPrismBreak();
-	//abort("use asdon to buff up if we have it");
+	cli_execute("gasdon observantly 1000");
 	if (get_workshed() != $item[cold medicine cabinet])
 		use(1, $item[cold medicine cabinet]);
 	doGarboDay(false);
