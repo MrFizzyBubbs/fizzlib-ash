@@ -1,46 +1,12 @@
-import <fizz-sccs-lib.ash>
-import <fizz-sccs-combat.ash>
-import <fizz-sccs-ascend.ash>
-import <profit-tracking.ash>
+import <fizzlib.ash>
 
-boolean canAscend(boolean casual) {
-	if (!get_property("kingLiberated").to_boolean())
-		return false;
-	
-	string page = visit_url(`ascensionhistory.php?back=self&who={my_id()}`);
-	string today = now_to_string("MM/dd/yy");
-	
-	string pattern;
-	if (casual)
-		pattern = `{today}(?:(?!<\/tr>).)+title="Casual"><\/td><\/tr>`;
-	else
-		pattern = `{today}(?:(?!<\/tr>|title="Casual"><\/td>).)+<\/tr>`;
-	
-	matcher match = create_matcher(pattern, page);
-	return !find(match);
-}
-
-boolean canAscendNoncasual() {
-	return canAscend(false);
-}
-
-boolean canAscendCasual() {
-	return canAscend(true);
-}
-
-boolean isDuplicatable(item it) {
-	boolean isStealable = is_tradeable(it) && is_discardable(it) && !it.gift;
-	boolean isPotion = it.usable && !it.reusable && effect_modifier(it, "effect") != $effect[none]; 
-	return isStealable && (item_type(it) == "food" || item_type(it) == "booze" || item_type(it) == "spleen item" || isPotion);
-}
 
 void dupeInDmt(item it) {
-	assert(isDuplicatable(it), `Item {it} is not duplicatable in the DMT`);
-	assert(item_amount(it) > 0, `Missing item {it} in inventory to duplicate`);
+	assert(isDmtDupable(it), `Item {it} is not duplicatable in the DMT`);
+	assert(item_amount(it) > 0, `Need item {it} in inventory to duplicate`);
 	
 	if (get_property("lastDMTDuplication").to_int() != my_ascensions()) {
-		assert(get_property("encountersUntilDMTChoice").to_int() == 0, "DMT chocie adv is not ready");
-		//if (!get_property("_claraBellUsed").to_boolean()) use(1, $item[Clara"s bell]);
+		assert(get_property("encountersUntilDMTChoice").to_int() == 0, "DMT choice adv is not ready");
 		use_familiar($familiar[machine elf]);
 		visit_url("adventure.php?snarfblat=458");
 		assert(handling_choice() && last_choice() == 1119, "Failed to encounter DMT choice adv");
@@ -53,16 +19,15 @@ void getCalderaCoin() {
 	while (get_property("lastDoghouseVolcoino") != my_ascensions()) {		
 		acquire($effect[A Few Extra Pounds]);
 		acquire($effect[Big]);
-		ensureHp(0.8);
-		ensureMp(8);
 		adv1($location[The Bubblin' Caldera], -1, mNew().mAttackRepeat());
-		if ($location[The Bubblin' Caldera].noncombat_queue.contains_text("Lava Dogs"))
+		if ($location[The Bubblin' Caldera].noncombat_queue.contains_text("Lava Dogs")) {
 			set_property("lastDoghouseVolcoino", my_ascensions());
+		}
+		assert(!have($effect[beaten up]), "We got beaten up");
 	}
 	
-	if (have($effect[Drenched in Lava])) 
-		cli_execute("hottub");
-		assert(!have($effect[Drenched in Lava]), "Failed to get rid of Drenched in Lava");
+	if (have($effect[Drenched in Lava])) cli_execute("hottub");
+	assert(!have($effect[Drenched in Lava]), "Failed to get rid of Drenched in Lava");
 }
 
 void afterPrismBreak() {
@@ -75,7 +40,7 @@ void afterPrismBreak() {
 	equip($slot[weapon], $item[Fourth of May Cosplay Saber]);
 	equip($slot[off-hand], $item[KoL Con 13 snowglobe]);
 	equip($slot[back], $item[Buddy Bjorn]);
-	bjornify_familiar($familiar[Warbear Drone]);
+	
 	//equip($slot[shirt], $item[Sneaky Pete's leather jacket]);
 	equip($slot[pants], $item[Cargo Cultist Shorts]);
 	equip($slot[acc1], $item[lucky gold ring]);
@@ -83,33 +48,33 @@ void afterPrismBreak() {
 	equip($slot[acc3], $item[mafia thumb ring]);
 	use_familiar($familiar[machine elf]);
 	equip($slot[familiar], $item[self-dribbling basketball]);
+	// `{my_primestat()}, equip Buddy Bjorn, equip Fourth of May Cosplay Saber, equip Mr. Screege's spectacles, equip mafia thumb ring, equip lucky gold ring`
+	bjornify_familiar($familiar[Warbear Drone]);
 	
 	dupeInDmt($item[very fancy whiskey]);
 	getCalderaCoin();
 }
 
-boolean haveOrganSpace() {
-	return my_spleen_use() < spleen_limit() || my_fullness() < fullness_limit() || my_inebriety() < inebriety_limit();
-}
-
 void doGarboDay(boolean ascend) {
 	assert(can_interact(), "Still in run");
 	cli_execute("breakfast; Detective Solver.ash");
-	if (!get_property("moonTuned").to_boolean()) 
+	if (!get_property("moonTuned").to_boolean()) {
 		cli_execute("spoon Opossum");
+	}
 	if (my_inebriety() <= inebriety_limit()) {
 		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
 	}
 	assert(!haveOrganSpace(), "Organ space remaining");
 	assert(my_adventures() == 0, "Adventures remaining");
 	cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
-	if (ascend) 
+	if (ascend) {
 		cli_execute(`combo {my_adventures()}; pvp loot On the Nice List`);
-	else {
+	} else {
 		cli_execute("maximize adv; terminal enquiry familiar.enq");
 		if (!(get_campground() contains $item[clockwork maid])) {
-			if (!have($item[clockwork maid])) 
+			if (!have($item[clockwork maid])) {
 				buy(1, $item[clockwork maid], 8 * get_property("valueOfAdventure").to_int());
+			}
 			tryUse($item[clockwork maid]);
 		}
 	}
@@ -127,8 +92,9 @@ void main() {
 	logProfit("AfterFirstGarbo");
 	
 	logProfit("BeforeCS");
-	if (canAscendNoncasual() || my_path() == "Community Service")
+	if (canAscendNoncasual() || my_path() == "Community Service") {
 		cli_execute("fizz-sccs.ash");
+	}
 	logProfit("AfterCS");
 	
 	logProfit("BeforeSecondGarbo");
@@ -159,14 +125,16 @@ void main() {
 				break;
 		}
 		
-		if (get_workshed() != $item[Asdon Martin keyfob])
+		if (get_workshed() != $item[Asdon Martin keyfob]) {
 			use(1, $item[Asdon Martin keyfob]);
+		}
 		
-		if (!(get_chateau() contains nightstand))
+		if (!(get_chateau() contains nightstand)) {
 			buy(1, nightstand);
+		}
 			
 		// change garden?
-		ascend("Unrestricted", playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
+		ascend(paths["NONE"], playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 		
 	}
 	cli_execute("loopcasual");
@@ -175,11 +143,18 @@ void main() {
 	logProfit("BeforeThirdGarbo");
 	afterPrismBreak();
 	cli_execute("gasdon observantly 1000");
-	if (get_workshed() != $item[cold medicine cabinet])
+	if (get_workshed() != $item[cold medicine cabinet]) {
 		use(1, $item[cold medicine cabinet]);
+	}
 	doGarboDay(false);
 	logProfit("AfterThirdGarbo");
 	
 	logProfit("End");
-	compareProfit("Begin", "End", false);
+	
+	compareProfit('BeforeFirstGarbo', 'AfterFirstGarbo', true);
+	compareProfit('BeforeCS', 'AfterCS', true);
+	compareProfit('BeforeSecondGarbo', 'AfterSecondGarbo', true);
+	compareProfit('BeforeCasual', 'AfterCasual', true);
+	compareProfit('BeforeThirdGarbo', 'AfterThirdGarbo', true);
+	compareProfit('Begin', 'End', false);
 }

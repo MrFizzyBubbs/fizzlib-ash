@@ -1,5 +1,30 @@
-import <fizzlib.ash>
+import <fizzlib-utils.ash>
 
+
+boolean canAscend(boolean casual) {
+	if (!get_property("kingLiberated").to_boolean())
+		return false;
+	
+	string page = visit_url(`ascensionhistory.php?back=self&who={my_id()}`);
+	string today = now_to_string("MM/dd/yy");
+	
+	string pattern;
+	if (casual)
+		pattern = `{today}(?:(?!<\/tr>).)+title="Casual"><\/td><\/tr>`;
+	else
+		pattern = `{today}(?:(?!<\/tr>|title="Casual"><\/td>).)+<\/tr>`;
+	
+	matcher match = create_matcher(pattern, page);
+	return !find(match);
+}
+
+boolean canAscendNoncasual() {
+	return canAscend(false);
+}
+
+boolean canAscendCasual() {
+	return canAscend(true);
+}
 
 record pathInfo {
 	string name;
@@ -90,13 +115,18 @@ int toMoonId(string moon) {
 }
 
 void ascend(pathInfo path, class playerClass, string lifestyle, string moon, item consumable, item pet) {
+	int lifestyleId = toLifestyleId(lifestyle);
 	if (!visit_url("charpane.php").contains_text("Astral Spirit")) {
+		assert(!haveOrganSpace(), "Organ space available");
+		assert(my_adventures() == 0, "Adventures available");
+		assert(pvp_attacks_left() == 0, "PvP fites available");
+		assert(lifestyleId != 1 || canAscendCasual(), "Already ascended into a casual run today");
+		assert(lifestyleId == 1 || canAscendNoncasual(), "Already ascended into a non-casual run today");
 		visit_url("ascend.php?action=ascend&confirm=on&confirm2=on");
 	}
 	assert(visit_url("charpane.php").contains_text("Astral Spirit"), "Failed to ascend");
 	assert(path.classes contains playerClass, `Invalid class "{playerClass}" for path "{path.name}"`);
 	
-	int lifestyleId = toLifestyleId(lifestyle);
 	int moonId = toMoonId(moon);
 	assert(
 		$items[none, astral six-pack, astral hot dog dinner, [10882]carton of astral energy drinks] contains consumable,
@@ -192,7 +222,7 @@ void prepareAscension(item workshed, item garden, item eudora, item chateauDesk,
 		}
 	}
 }
-	
+
 void main() {
 	dump(eudorae);
 }

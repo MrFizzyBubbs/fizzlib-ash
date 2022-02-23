@@ -1,11 +1,12 @@
+import <fizzlib-ascend.ash>
+
+
 static {
-	boolean [item] gardens = $items[Peppermint Pip Packet, packet of dragon's teeth, packet of beer seeds, packet of winter seeds, packet of thanksgarden seeds, packet of tall grass seeds, packet of mushroom spores];
-	boolean [item] worksheds = $items[warbear jackhammer drill press, warbear auto-anvil, warbear induction oven, warbear chemistry lab, warbear high-efficiency still, warbear lp-rom burner, spinning wheel, snow machine, asdon martin keyfob, portable mayo clinic, little geneticist dna-splicing lab, diabolic pizza cube];
 	string[coinmaster, string, int, item] cm_txt;
 	file_to_map('data/coinmasters.txt', cm_txt);
 	item [item] itemsFromTokens {
 		$item[Freddy Kruegerand]: $item[Dreadsylvanian skeleton key],
-		$item[Beach Buck]: $item[one-day ticket to Spring Break Beach  ],
+		$item[Beach Buck]: $item[one-day ticket to Spring Break Beach],
 		$item[Coinspiracy]: $item[Merc Core deployment orders],
 		$item[FunFunds&trade;]: $item[one-day ticket to Dinseylandfill],
 		$item[Volcoino]: $item[one-day ticket to That 70s Volcano],
@@ -175,8 +176,4 @@ void compareProfit(string date1, string event1, string date2, string event2, boo
 
 void compareProfit(string event1, string event2, boolean silent) {
 	compareProfit(today_to_string(), event1, today_to_string(), event2, silent);
-}
-
-void main(string event) {
-	logProfit(event);
 }

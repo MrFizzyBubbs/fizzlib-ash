@@ -1,0 +1,3 @@
+https://svn.code.sf.net/p/kolmafiascripts/cfstat/code/
+https://github.com/Ezandora/Detective-Solver/branches/Release/
+https://github.com/soolar/CONSUME.ash/trunk/RELEASE/
