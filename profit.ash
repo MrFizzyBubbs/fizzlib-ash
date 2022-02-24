@@ -1,4 +1,4 @@
-import <fizzlib-ascend.ash>
+import <fizzlib/ascend.ash>
 
 
 static {

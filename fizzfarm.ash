@@ -31,37 +31,26 @@ void getCalderaCoin() {
 }
 
 void afterPrismBreak() {
-	cli_execute("pull all; uneffect Feeling Lost; counters clear; peevpee.php?action=smashstone&confirm=on; backupcamera reverser on");
+	cli_execute("pull all; uneffect Feeling Lost; peevpee.php?action=smashstone&confirm=on; backupcamera reverser on");
 	put_closet(my_meat() - 2000000);
 	tryUse($item[can of Rain-Doh]);
 	tryUse($item[astral six-pack]);
-	
-	equip($slot[hat], $item[Daylight Shavings Helmet]);
-	equip($slot[weapon], $item[Fourth of May Cosplay Saber]);
-	equip($slot[off-hand], $item[KoL Con 13 snowglobe]);
-	equip($slot[back], $item[Buddy Bjorn]);
-	
-	//equip($slot[shirt], $item[Sneaky Pete's leather jacket]);
-	equip($slot[pants], $item[Cargo Cultist Shorts]);
-	equip($slot[acc1], $item[lucky gold ring]);
-	equip($slot[acc2], $item[Mr. Screege's spectacles]);
-	equip($slot[acc3], $item[mafia thumb ring]);
+
 	use_familiar($familiar[machine elf]);
-	equip($slot[familiar], $item[self-dribbling basketball]);
-	// `{my_primestat()}, equip Buddy Bjorn, equip Fourth of May Cosplay Saber, equip Mr. Screege's spectacles, equip mafia thumb ring, equip lucky gold ring`
+	maximize(`{my_primestat()}, equip Buddy Bjorn, equip Fourth of May Cosplay Saber, equip Mr. Screege's spectacles, equip mafia thumb ring, equip lucky gold ring`, false);
 	bjornify_familiar($familiar[Warbear Drone]);
 	
 	dupeInDmt($item[very fancy whiskey]);
 	getCalderaCoin();
 }
 
-void doGarboDay(boolean ascend) {
+void doGarbo(boolean ascend) {
 	assert(can_interact(), "Still in run");
 	cli_execute("breakfast; Detective Solver.ash");
 	if (!get_property("moonTuned").to_boolean()) {
 		cli_execute("spoon Opossum");
 	}
-	if (my_inebriety() <= inebriety_limit()) {
+	if (haveOrganSpace() || my_adventures() >= 0) {
 		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
 	}
 	assert(!haveOrganSpace(), "Organ space remaining");
@@ -82,11 +71,14 @@ void doGarboDay(boolean ascend) {
 
 void main() {
 	boolean skipCasual = false;
+	class playerClass = $class[Seal Clubber];
+	assert(my_class() != $class[none], "Unexpectedly in Valhalla, manual intervention requested");
+	
 	logProfit("Begin");
 	
 	logProfit("BeforeFirstGarbo");
 	if (canAscendNoncasual()) {
-		doGarboDay(true);
+		doGarbo(true);
 		// TODO handle swapping to DNA lab and creating 3 tonics?
 	}
 	logProfit("AfterFirstGarbo");
@@ -100,14 +92,12 @@ void main() {
 	logProfit("BeforeSecondGarbo");
 	if (canAscendCasual() && !skipCasual) {
 		afterPrismBreak();	
-		doGarboDay(true);
+		doGarbo(true);
 	}
 	logProfit("AfterSecondGarbo");
 
 	logProfit("BeforeCasual");
 	if (canAscendCasual() && !skipCasual) {
-		class playerClass = $class[Seal Clubber];
-		
 		string moon;
 		item nightstand;
 		switch (playerClass.primestat) {
@@ -124,18 +114,10 @@ void main() {
 				nightstand = $item[bowl of potpourri];
 				break;
 		}
-		
-		if (get_workshed() != $item[Asdon Martin keyfob]) {
-			use(1, $item[Asdon Martin keyfob]);
-		}
-		
-		if (!(get_chateau() contains nightstand)) {
-			buy(1, nightstand);
-		}
 			
-		// change garden?
+		// TODO change garden?
+		prepareAscension($item[Asdon Martin keyfob], $item[none], $item[none], $item[none], $item[none], nightstand);
 		ascend(paths["NONE"], playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
-		
 	}
 	cli_execute("loopcasual");
 	logProfit("AfterCasual");
@@ -146,15 +128,15 @@ void main() {
 	if (get_workshed() != $item[cold medicine cabinet]) {
 		use(1, $item[cold medicine cabinet]);
 	}
-	doGarboDay(false);
+	doGarbo(false);
 	logProfit("AfterThirdGarbo");
 	
 	logProfit("End");
 	
-	compareProfit('BeforeFirstGarbo', 'AfterFirstGarbo', true);
-	compareProfit('BeforeCS', 'AfterCS', true);
-	compareProfit('BeforeSecondGarbo', 'AfterSecondGarbo', true);
-	compareProfit('BeforeCasual', 'AfterCasual', true);
-	compareProfit('BeforeThirdGarbo', 'AfterThirdGarbo', true);
-	compareProfit('Begin', 'End', false);
+	compareProfit("BeforeFirstGarbo", "AfterFirstGarbo", true);
+	compareProfit("BeforeCS", "AfterCS", true);
+	compareProfit("BeforeSecondGarbo", "AfterSecondGarbo", true);
+	compareProfit("BeforeCasual", "AfterCasual", true);
+	compareProfit("BeforeThirdGarbo", "AfterThirdGarbo", true);
+	compareProfit("Begin", "End", false);
 }

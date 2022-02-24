@@ -1,4 +1,4 @@
-import <fizzlib-utils.ash>
+import <fizzlib/utils.ash>
 
 
 boolean canAscend(boolean casual) {
@@ -115,18 +115,8 @@ int toMoonId(string moon) {
 }
 
 void ascend(pathInfo path, class playerClass, string lifestyle, string moon, item consumable, item pet) {
-	int lifestyleId = toLifestyleId(lifestyle);
-	if (!visit_url("charpane.php").contains_text("Astral Spirit")) {
-		assert(!haveOrganSpace(), "Organ space available");
-		assert(my_adventures() == 0, "Adventures available");
-		assert(pvp_attacks_left() == 0, "PvP fites available");
-		assert(lifestyleId != 1 || canAscendCasual(), "Already ascended into a casual run today");
-		assert(lifestyleId == 1 || canAscendNoncasual(), "Already ascended into a non-casual run today");
-		visit_url("ascend.php?action=ascend&confirm=on&confirm2=on");
-	}
-	assert(visit_url("charpane.php").contains_text("Astral Spirit"), "Failed to ascend");
 	assert(path.classes contains playerClass, `Invalid class "{playerClass}" for path "{path.name}"`);
-	
+	int lifestyleId = toLifestyleId(lifestyle);
 	int moonId = toMoonId(moon);
 	assert(
 		$items[none, astral six-pack, astral hot dog dinner, [10882]carton of astral energy drinks] contains consumable,
@@ -137,11 +127,22 @@ void ascend(pathInfo path, class playerClass, string lifestyle, string moon, ite
 		`Invalid astral item "{pet}"`
 	);
 	
+	if (!visit_url("charpane.php").contains_text("Astral Spirit")) {
+		assert(!haveOrganSpace(), "Organ space available");
+		assert(my_adventures() == 0, "Adventures available");
+		assert(pvp_attacks_left() == 0, "PvP fites available");
+		assert(lifestyleId != 1 || canAscendCasual(), "Already ascended into a casual run today");
+		assert(lifestyleId == 1 || canAscendNoncasual(), "Already ascended into a non-casual run today");
+		visit_url("ascend.php?action=ascend&confirm=on&confirm2=on");
+	}
+	
+	assert(visit_url("charpane.php").contains_text("Astral Spirit"), "Failed to ascend");
 	visit_url("afterlife.php?action=pearlygates");
 	if (consumable != $item[none]) visit_url(`afterlife.php?action=buydeli&whichitem={consumable.to_int()}`);
 	if (pet != $item[none]) visit_url(`afterlife.php?action=buyarmory&whichitem={pet.to_int()}`);
 
-	visit_url(`afterlife.php?action=ascend&confirmascend=1&whichsign=${moonId}&gender=1&whichclass={playerClass.to_int()}&whichpath={path.id}&asctype={lifestyleId}&nopetok=1&noskillsok=1&pwd`, true); // &lamepathok=1&lamesignok=1
+	visit_url(`afterlife.php?action=ascend&confirmascend=1&whichsign={moonId}&gender=1&whichclass={playerClass.to_int()}&whichpath={path.id}&asctype={lifestyleId}&nopetok=1&noskillsok=1&pwd`, true); // &lamepathok=1&lamesignok=1
+	assert(!visit_url("charpane.php").contains_text("Astral Spirit"), "Failed to reincarnate");
 }
 
 boolean [item] worksheds = $items[
@@ -184,38 +185,38 @@ boolean [item] chateauCeilings = $items[antler chandelier, ceiling fan, artifici
 boolean [item] chateauNightstands = $items[foreign language tapes, bowl of potpourri, electric muscle stimulator];
 
 void prepareAscension(item workshed, item garden, item eudora, item chateauDesk, item chateauCeiling, item chateauNightstand) {
-	if (workshed != $item[none] && get_workshed() != workshed) {
+	if (workshed.to_boolean() && get_workshed() != workshed) {
 		assert(worksheds contains workshed, `Invalid workshed "{workshed}"`);
 		use(1, workshed);
 		assert(get_workshed() == workshed, `Failed to change workshed to {workshed}`);
 	}
 	
-	if (garden != $item[none] && !(get_campground() contains garden)) {
+	if (garden.to_boolean() && !(get_campground() contains garden)) {
 		assert(gardens contains garden, `Invalid garden "{garden}"`);
 		use(1, garden);
 		assert(get_campground() contains garden, `Failed to change garden to {garden}`);
 	}
 	
-	if (eudora != $item[none] && eudora_item() != eudora) {
+	if (eudora.to_boolean() && eudora_item() != eudora) {
 		assert(eudorae contains eudora, `Invalid eudora "{eudora}"`);
 		eudora(eudora.name);
 		assert(eudora_item() == eudora, `Failed to change eudora to {eudora}`);
 	}
 	
 	if (get_property("chateauAvailable").to_boolean()) {
-		if (!(get_chateau() contains chateauDesk)) {
+		if (chateauDesk.to_boolean() && !(get_chateau() contains chateauDesk)) {
 			assert(chateauDesks contains chateauDesk, `Invalid chateau desk "{chateauDesk}"`);
 			buy(1, chateauDesk);
 			assert(get_chateau() contains chateauDesk, `Failed to change chateau desk to {chateauDesk}`);
 		}
 		
-		if (!(get_chateau() contains chateauCeiling)) {
+		if (chateauCeiling.to_boolean() && !(get_chateau() contains chateauCeiling)) {
 			assert(chateauCeilings contains chateauCeiling, `Invalid chateau ceiling "{chateauCeiling}"`);
 			buy(1, chateauCeiling);
 			assert(get_chateau() contains chateauCeiling, `Failed to change chateau ceiling to {chateauCeiling}`);
 		}
 		
-		if (!(get_chateau() contains chateauNightstand)) {
+		if (chateauNightstand.to_boolean() && !(get_chateau() contains chateauNightstand)) {
 			assert(chateauNightstands contains chateauNightstand, `Invalid chateau nightstand "{chateauNightstand}"`);
 			buy(1, chateauNightstand);
 			assert(get_chateau() contains chateauNightstand, `Failed to change chateau nightstand to {chateauNightstand}`);
@@ -224,5 +225,7 @@ void prepareAscension(item workshed, item garden, item eudora, item chateauDesk,
 }
 
 void main() {
-	dump(eudorae);
+	print(`can ascend non-casual: {canAscendNoncasual()}`);
+	print(`can ascend casual: {canAscendCasual()}`);
+	//ascend(paths["NONE"], $class[seal clubber], "casual", "Mongoose", $item[astral six-pack], $item[astral pet sweater]);
 }
