@@ -17,8 +17,9 @@ void dupeInDmt(item it) {
 
 void getCalderaCoin() {
 	while (get_property("lastDoghouseVolcoino") != my_ascensions()) {		
-		acquire($effect[A Few Extra Pounds]);
-		acquire($effect[Big]);
+		foreach ef in $effects[A Few Extra Pounds, Big, Feeling Excited, Power Ballad of the Arrowsmith] {
+			acquire(ef);
+		}
 		adv1($location[The Bubblin' Caldera], -1, mNew().mAttackRepeat());
 		if ($location[The Bubblin' Caldera].noncombat_queue.contains_text("Lava Dogs")) {
 			set_property("lastDoghouseVolcoino", my_ascensions());
@@ -71,7 +72,8 @@ void doGarbo(boolean ascend) {
 
 void main() {
 	boolean skipCasual = false;
-	class playerClass = $class[Seal Clubber];
+	boolean abortAfterCasual = false;
+	class casualClass = $class[Seal Clubber];
 	assert(my_class() != $class[none], "Unexpectedly in Valhalla, manual intervention requested");
 	
 	logProfit("Begin");
@@ -100,7 +102,7 @@ void main() {
 	if (canAscendCasual() && !skipCasual) {
 		string moon;
 		item nightstand;
-		switch (playerClass.primestat) {
+		switch (casualClass.primestat) {
 			case $stat[Muscle]:
 				moon = "Mongoose";
 				nightstand = $item[electric muscle stimulator];
@@ -117,14 +119,17 @@ void main() {
 			
 		// TODO change garden?
 		prepareAscension($item[Asdon Martin keyfob], $item[none], $item[none], $item[none], $item[none], nightstand);
-		ascend(paths["NONE"], playerClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
+		ascend(paths["NONE"], casualClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 	}
 	cli_execute("loopcasual");
 	logProfit("AfterCasual");
 	
 	logProfit("BeforeThirdGarbo");
 	afterPrismBreak();
-	cli_execute("gasdon observantly 1000");
+	assert(!abortAfterCasual, "User requested abort after casual");
+	if (get_workshed() == $item[Asdon Martin keyfob]) {
+		cli_execute("gasdon observantly 1000");
+	}
 	if (get_workshed() != $item[cold medicine cabinet]) {
 		use(1, $item[cold medicine cabinet]);
 	}
