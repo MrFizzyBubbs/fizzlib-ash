@@ -16,7 +16,9 @@ void dupeInDmt(item it) {
 }
 
 void getCalderaCoin() {
-	while (get_property("lastDoghouseVolcoino") != my_ascensions()) {		
+	int tries = 0;
+	while (get_property("lastDoghouseVolcoino") != my_ascensions()) {
+		assert(tries <= 8, "Exceeded 8 tries, we probably already obtained the caldera volcoino this ascension");
 		foreach ef in $effects[A Few Extra Pounds, Big, Feeling Excited, Power Ballad of the Arrowsmith] {
 			acquire(ef);
 		}
@@ -25,6 +27,7 @@ void getCalderaCoin() {
 			set_property("lastDoghouseVolcoino", my_ascensions());
 		}
 		assert(!have($effect[beaten up]), "We got beaten up");
+		tries++;
 	}
 	
 	if (have($effect[Drenched in Lava])) cli_execute("hottub");
@@ -48,17 +51,19 @@ void afterPrismBreak() {
 void doGarbo(boolean ascend) {
 	assert(can_interact(), "Still in run");
 	cli_execute("breakfast; Detective Solver.ash");
-	if (!get_property("moonTuned").to_boolean()) {
+	if (!get_property("moonTuned").to_boolean() && my_sign() != "Opossum") {
 		cli_execute("spoon Opossum");
 	}
-	if (haveOrganSpace() || my_adventures() >= 0) {
+	if ((haveOrganSpace() || my_adventures() > 0) && my_inebriety() <= inebriety_limit()) {
 		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
 	}
 	assert(!haveOrganSpace(), "Organ space remaining");
 	assert(my_adventures() == 0, "Adventures remaining");
+	set_property("spiceMelangeUsed", true);// prevent CONSUME from using a melange after garbo
 	cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
 	if (ascend) {
-		cli_execute(`combo {my_adventures()}; pvp loot On the Nice List`);
+		cli_execute(`combo {my_adventures()}; Uber2.ash; pvp loot Hibernation Ready`);
+		assert(!have($item[astral pilsner]), `We have {available_amount($item[astral pilsner])} astral pilsners remaining, why weren't these used?`);
 	} else {
 		cli_execute("maximize adv; terminal enquiry familiar.enq");
 		if (!(get_campground() contains $item[clockwork maid])) {
@@ -71,11 +76,10 @@ void doGarbo(boolean ascend) {
 }
 
 void main() {
-	boolean skipCasual = false;
-	boolean abortAfterCasual = false;
+	assert(my_class() != $class[none], "Started script in Valhalla, manual intervention requested");
+	boolean noCasual = false;
 	class casualClass = $class[Seal Clubber];
-	assert(my_class() != $class[none], "Unexpectedly in Valhalla, manual intervention requested");
-	
+
 	logProfit("Begin");
 	
 	logProfit("BeforeFirstGarbo");
@@ -92,14 +96,14 @@ void main() {
 	logProfit("AfterCS");
 	
 	logProfit("BeforeSecondGarbo");
-	if (canAscendCasual() && !skipCasual) {
+	if (canAscendCasual() && !noCasual) {
 		afterPrismBreak();	
 		doGarbo(true);
 	}
 	logProfit("AfterSecondGarbo");
 
 	logProfit("BeforeCasual");
-	if (canAscendCasual() && !skipCasual) {
+	if (canAscendCasual() && !noCasual) {
 		string moon;
 		item nightstand;
 		switch (casualClass.primestat) {
@@ -116,8 +120,6 @@ void main() {
 				nightstand = $item[bowl of potpourri];
 				break;
 		}
-			
-		// TODO change garden?
 		prepareAscension($item[Asdon Martin keyfob], $item[none], $item[none], $item[none], $item[none], nightstand);
 		ascend(paths["NONE"], casualClass, "casual", moon, $item[astral six-pack], $item[astral pet sweater]);
 	}
@@ -126,7 +128,7 @@ void main() {
 	
 	logProfit("BeforeThirdGarbo");
 	afterPrismBreak();
-	assert(!abortAfterCasual, "User requested abort after casual");
+	//assert(!abortAfterCasual, "User requested abort after casual");
 	if (get_workshed() == $item[Asdon Martin keyfob]) {
 		cli_execute("gasdon observantly 1000");
 	}

@@ -60,6 +60,38 @@ void suggestDmtDupes() {
 	}
 }
 
+void closet_pvpable() {
+	int minimum_value = 10000; // Closet everything stealable worth more than this; 0 = closet everything stealable.
+	int verbose = 1; //0 = don't print individual items; 1 = print closeted items; 2 = also too cheap to closet; 3 = also unstealable.
+
+    if (minimum_value < 0) abort ("A minimum_value less than zero makes no sense at all.");
+    int count_cheap, count_closet, count_total, count_unstealable;
+    int [item] inv = get_inventory();
+    boolean [item] pvp_unimportant = $items[tenderizing hammer, dramatic range, Queue Du Coq cocktailcrafting kit];
+    boolean is_stealable(item it) { return is_tradeable(it) && is_discardable(it); }
+    foreach it, qty in inv {
+        int price = -1;
+        if (is_stealable(it) && !(pvp_unimportant contains it)) price = historical_price(it);
+        if (price < 0) {
+            count_unstealable += 1;
+        } else if (price < minimum_value) {
+            count_cheap += 1;
+        } else if (price >= minimum_value) {
+            count_closet += 1;
+		print(`Closet {qty} {it} @ {historical_price(it).to_string('%,d')} each in the mall`, "blue");
+            put_closet(qty, it);
+        }
+        
+    }
+    count_total = count_closet + count_cheap + count_unstealable;
+    print(""); //linebreak
+    if (count_closet > 0) print("+ " + count_closet + " closeted", "teal");
+    if (count_cheap > 0) print("+ " + count_cheap + " worth less than " + minimum_value.to_string('%,d') + " meat", "red");
+    if (count_unstealable > 0) print("+ " + count_unstealable + " unstealable", "green");
+    if (count_total > 0) print(" = " +  count_total + " of " + count(inv) + " items accounted for.");
+    print_html("<b>Done! <a href=\"http://kolmafia.us/showthread.php?10059\">discussion thread link</a></b>");
+}
+
 // Effects
 
 boolean have(effect ef, int amount) {
@@ -79,6 +111,10 @@ void acquire(effect ef) {
 }
 
 // Character
+
+boolean isKingFree() {
+	return get_property("kingLiberated").to_boolean();
+}
 
 boolean haveOrganSpace() {
 	return my_spleen_use() < spleen_limit() || my_fullness() < fullness_limit() || my_inebriety() < inebriety_limit();
