@@ -1,7 +1,7 @@
 import <fizzlib.ash>
 
 
-void dupeInDmt(item it) {
+void useDMTDupe(item it) {
 	assert(isDmtDupable(it), `Item {it} is not duplicatable in the DMT`);
 	assert(item_amount(it) > 0, `Need item {it} in inventory to duplicate`);
 	
@@ -15,19 +15,15 @@ void dupeInDmt(item it) {
 	}
 }
 
-void getCalderaCoin() {
-	int tries = 0;
+void getDoghouseVolcoino() {
+	int advs = my_adventures();
 	while (get_property("lastDoghouseVolcoino") != my_ascensions()) {
-		assert(tries <= 8, "Exceeded 8 tries, we probably already obtained the caldera volcoino this ascension");
-		foreach ef in $effects[A Few Extra Pounds, Big, Feeling Excited, Power Ballad of the Arrowsmith] {
-			acquire(ef);
-		}
 		adv1($location[The Bubblin' Caldera], -1, mNew().mAttackRepeat());
 		if ($location[The Bubblin' Caldera].noncombat_queue.contains_text("Lava Dogs")) {
 			set_property("lastDoghouseVolcoino", my_ascensions());
 		}
 		assert(!have($effect[beaten up]), "We got beaten up");
-		tries++;
+		assert(my_adventures() - advs <= 5, "Exceeded 5 adventures getting the doghouse volcoino");
 	}
 	
 	if (have($effect[Drenched in Lava])) cli_execute("hottub");
@@ -43,26 +39,28 @@ void afterPrismBreak() {
 	use_familiar($familiar[machine elf]);
 	maximize(`{my_primestat()}, equip Buddy Bjorn, equip Fourth of May Cosplay Saber, equip Mr. Screege's spectacles, equip mafia thumb ring, equip lucky gold ring`, false);
 	bjornify_familiar($familiar[Warbear Drone]);
+	foreach ef in $effects[A Few Extra Pounds, Big, Feeling Excited, Power Ballad of the Arrowsmith] {
+		acquire(ef);
+	}
 	
-	dupeInDmt($item[very fancy whiskey]);
-	getCalderaCoin();
+	useDMTDupe($item[very fancy whiskey]);
+	getDoghouseVolcoino();
 }
 
 void doGarbo(boolean ascend) {
 	assert(can_interact(), "Still in run");
+	put_closet(my_meat() - 2000000);
 	cli_execute("breakfast; Detective Solver.ash");
-	if (!get_property("moonTuned").to_boolean() && my_sign() != "Opossum") {
-		cli_execute("spoon Opossum");
+	if (!get_property("moonTuned").to_boolean() && my_sign() != "Platypus") {
+		cli_execute("spoon Platypus");
 	}
-	if ((haveOrganSpace() || my_adventures() > 0) && my_inebriety() <= inebriety_limit()) {
-		cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
-	}
+	cli_execute(`garbo {(ascend) ? "ascend" : ""}`);
 	assert(!haveOrganSpace(), "Organ space remaining");
 	assert(my_adventures() == 0, "Adventures remaining");
-	set_property("spiceMelangeUsed", true);// prevent CONSUME from using a melange after garbo
+	set_property("spiceMelangeUsed", true); // prevent CONSUME from using a melange after garbo
 	cli_execute(`CONSUME NIGHTCAP {(ascend) ? "NOMEAT VALUE 4000" : ""}`);
 	if (ascend) {
-		cli_execute(`combo {my_adventures()}; Uber2.ash; pvp loot Hibernation Ready`);
+		cli_execute(`garbo ascend; Uber2.ash; swagger`);
 		assert(!have($item[astral pilsner]), `We have {available_amount($item[astral pilsner])} astral pilsners remaining, why weren't these used?`);
 	} else {
 		cli_execute("maximize adv; terminal enquiry familiar.enq");
@@ -101,7 +99,7 @@ void main() {
 		doGarbo(true);
 	}
 	logProfit("AfterSecondGarbo");
-
+	
 	logProfit("BeforeCasual");
 	if (canAscendCasual() && !noCasual) {
 		string moon;

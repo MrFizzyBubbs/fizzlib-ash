@@ -91,9 +91,9 @@ int itemValue(item it) {
 	return maxValue;
 }
 
-void logItems(string event) {
+void logItems(string date, string event) {
 	int [item] itemList;
-	file_to_map(`/Profit Tracking/{my_name()}/inventory/{today_to_string()} {event}.txt`, itemList);
+	file_to_map(`/Profit Tracking/{my_name()}/inventory/{date} {event}.txt`, itemList);
 	if (count(itemList) > 0)
 		print(`Profit: already logged items for event {event}`, 'orange');
 	else {
@@ -107,31 +107,35 @@ void logItems(string event) {
 			if (totalAmount(it) != 0) 
 				itemList[it] = totalAmount(it);
 		print(`Profit: {count(itemList).to_string('%,d')} items logged for event {event}`, 'fuchsia');
-		map_to_file(itemList, `/Profit Tracking/{my_name()}/inventory/{today_to_string()} {event}.txt`);
+		map_to_file(itemList, `/Profit Tracking/{my_name()}/inventory/{date} {event}.txt`);
 	}
 }
 
-void logMeat(string event) {
+void logMeat(string date, string event) {
 	record logevent { int adv; int meat; };
 	logevent [string, string] meatlist;
 	file_to_map(`/Profit Tracking/{my_name()}/meat.txt`, meatlist);
-	if (meatlist[today_to_string()] contains event)
+	if (meatlist[date] contains event)
 		print(`Profit: already logged meat for event {event}`, 'orange');
 	else {
 		logevent newest;
 		newest.meat = my_meat() + my_storage_meat() + my_closet_meat(); 
 		newest.adv = total_turns_played(); 
-		meatlist[today_to_string(), event] = newest;
+		meatlist[date, event] = newest;
 		boolean success = map_to_file(meatlist, `/Profit Tracking/{my_name()}/meat.txt`);
 		if (!success) abort("Profit: Aaah, we didn't write the file somehow");
 		print(`Profit: {newest.meat.to_string('%,d')} meat logged for event {event}`, 'fuchsia');
 	}
 }
 
-void logProfit(string event) {
+void logProfit(string date, string event) {
 	print(`Profit: logging items and meat for event {event}...`);
-	logItems(event);
-	logMeat(event);
+	logItems(date, event);
+	logMeat(date, event);
+}
+
+void logProfit(string event) {
+	logProfit(today_to_string(), event);
 }
 
 void compareProfit(string date1, string event1, string date2, string event2, boolean silent) {
@@ -176,4 +180,10 @@ void compareProfit(string date1, string event1, string date2, string event2, boo
 
 void compareProfit(string event1, string event2, boolean silent) {
 	compareProfit(today_to_string(), event1, today_to_string(), event2, silent);
+}
+
+void main() {
+	logProfit("Begin");
+	
+	logProfit("BeforeFirstGarbo");
 }
