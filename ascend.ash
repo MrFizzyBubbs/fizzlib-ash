@@ -1,29 +1,17 @@
 import <fizzlib/utils.ash>
 
-
-boolean canAscend(boolean casual) {
-	if (!get_property("kingLiberated").to_boolean())
-		return false;
-	
-	string page = visit_url(`ascensionhistory.php?back=self&who={my_id()}`);
-	string today = now_to_string("MM/dd/yy");
-	
-	string pattern;
-	if (casual)
-		pattern = `{today}(?:(?!<\/tr>).)+title="Casual"><\/td><\/tr>`;
-	else
-		pattern = `{today}(?:(?!<\/tr>|title="Casual"><\/td>).)+<\/tr>`;
-	
-	matcher match = create_matcher(pattern, page);
-	return !find(match);
-}
-
 boolean canAscendNoncasual() {
-	return canAscend(false);
+	if (!get_property("kingLiberated").to_boolean()) return false;
+	string session = file_to_buffer(`{my_name()}_{today_to_string()}.txt`);
+	string pattern = "Ascend as a (?:Normal|Hardcore) .+? banking \\d+ Karma.";
+	return !create_matcher(pattern, session).find();
 }
 
 boolean canAscendCasual() {
-	return canAscend(true);
+	if (!get_property("kingLiberated").to_boolean()) return false;
+	string session = file_to_buffer(`{my_name()}_{today_to_string()}.txt`);
+	string pattern = "Ascend as a Casual .+? banking \\d+ Karma.";
+	return !create_matcher(pattern, session).find();
 }
 
 record pathInfo {
