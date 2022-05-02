@@ -129,7 +129,7 @@ void ascend(pathInfo path, class playerClass, string lifestyle, string moon, ite
 	if (consumable != $item[none]) visit_url(`afterlife.php?action=buydeli&whichitem={consumable.to_int()}`);
 	if (pet != $item[none]) visit_url(`afterlife.php?action=buyarmory&whichitem={pet.to_int()}`);
 
-	visit_url(`afterlife.php?action=ascend&confirmascend=1&whichsign={moonId}&gender=1&whichclass={playerClass.to_int()}&whichpath={path.id}&asctype={lifestyleId}&nopetok=1&noskillsok=1&pwd`, true); // &lamepathok=1&lamesignok=1
+	visit_url(`afterlife.php?action=ascend&confirmascend=1&whichsign={moonId}&gender=1&whichclass={playerClass.to_int()}&whichpath={path.id}&asctype={lifestyleId}&nopetok=1&pwd`, true); // &lamepathok=1&lamesignok=1
 	assert(!visit_url("charpane.php").contains_text("Astral Spirit"), "Failed to reincarnate");
 }
 
