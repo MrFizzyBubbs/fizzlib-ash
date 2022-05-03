@@ -162,5 +162,5 @@ void summarizeResourceUsage() {
 }
 
 void main() {
-	suggestDmtDupes();
+	summarizeResourceUsage();
 }
